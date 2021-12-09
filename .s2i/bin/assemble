@@ -1,0 +1,11 @@
+#!/bin/bash
+
+set -e
+
+echo "---S2I---> Installing application source"
+cp -Rf /tmp/src/* ./
+
+DATE=`date "+%b %d, %Y @ %H:%M %p"`
+
+echo "Page built on $DATE" >> ./info.html
+

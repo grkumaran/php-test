@@ -1,12 +1,25 @@
-FROM php:7.2-apache
+FROM registry.access.redhat.com/ubi8/ubi:8.4
 
+LABEL io.k8s.description="A basic Apache HTTP Server S2I builder image" \
+ io.k8s.display-name="Apache HTTP Server S2I builder image for DO288" \
+ io.openshift.expose-services="8080:http" \
+ io.openshift.s2i.scripts-url="image:///usr/libexec/s2i"
 
+LABEL io.openshift.tags="builder, httpd, httpd24"
 
+ENV DOCROOT /var/www/html
 
-WORKDIR /var/www/html
+RUN yum install -y --nodocs --disableplugin=subscription-manager httpd && \ 
+ yum clean all --disableplugin=subscription-manager -y && \
+ echo "This is the default index page from the s2i-do288-httpd S2I builder image." > ${DOCROOT}/index.html
 
-COPY . .
+RUN sed -i "s/Listen 80/Listen 8080/g" /etc/httpd/conf/httpd.conf       
 
-EXPOSE 8080
+COPY ./php.extensions/* 
+
+#RUN chmod 775 /var/www/html
+
+#COPY ./s2i/bin/ /usr/libexec/s2i
+
 
 
