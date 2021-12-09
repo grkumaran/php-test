@@ -1,4 +1,4 @@
-FROM registry.access.redhat.com/ubi8/ubi:8.4
+FROM registry.access.redhat.com/ubi8/php-73:latest
 
 LABEL io.k8s.description="A basic Apache HTTP Server S2I builder image" \
  io.k8s.display-name="Apache HTTP Server S2I builder image for DO288" \
@@ -15,11 +15,9 @@ RUN yum install -y --nodocs --disableplugin=subscription-manager httpd && \
 
 RUN sed -i "s/Listen 80/Listen 8080/g" /etc/httpd/conf/httpd.conf       
 
-COPY ./php.extensions/* 
+#COPY ./php.extensions/* 
 
-#RUN chmod 775 /var/www/html
+#COPY ./src/* /var/www/html/
+RUN chmod 775 /var/www/html
 
-#COPY ./s2i/bin/ /usr/libexec/s2i
-
-
-
+COPY ./s2i/bin/ /usr/libexec/s2i
