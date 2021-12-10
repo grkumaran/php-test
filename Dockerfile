@@ -1,23 +1,30 @@
-FROM registry.access.redhat.com/ubi8/php-73:latest
+FROM bitnami/php-fpm
 
-LABEL io.k8s.description="A basic Apache HTTP Server S2I builder image" \
- io.k8s.display-name="Apache HTTP Server S2I builder image for DO288" \
- io.openshift.expose-services="8080:http" \
- io.openshift.s2i.scripts-url="image:///usr/libexec/s2i"
-
+LABEL io.openshift.expose-services="8080:http"
 LABEL io.openshift.tags="builder, httpd, httpd24"
 
-ENV DOCROOT /var/www/html
+# -- software management
+RUN apt-get -y update && apt-get install -y autoconf
+RUN apt-get -y install curl 
+                        
+#RUN sed -i 's/Listen 80/Listen 8080/' /etc/httpd/conf/httpd.conf \
+#  && mkdir /run/php-fpm \
+#  && chgrp -R 0 /var/log/httpd /var/run/httpd /run/php-fpm \
+#  && chmod -R g=u /var/log/httpd /var/run/httpd /run/php-fpm
+  
+#RUN apt-get -y install php-common php-pear php-devel make php-json && \
+#    pecl channel-update pecl.php.net && \
+#    echo "\n" |pecl install igbinary redis mongodb docker-php-ext-enable && \
+#    echo "extension=json" > /etc/php.d/20-json.ini && \
+#    echo "extension=igbinary" > /etc/php.d/20-igbinary.ini && \
+#    echo "extension=redis" > /etc/php.d/40-redis.ini && \
+#    echo "extension=mongodb" > /etc/php.d/50-mongodb.ini
 
-RUN yum install -y --nodocs --disableplugin=subscription-manager httpd && \ 
- yum clean all --disableplugin=subscription-manager -y && \
- echo "This is the default index page from the s2i-do288-httpd S2I builder image." > ${DOCROOT}/index.html
+COPY ./src/* /app/
+RUN chown -R 1001 /app/
 
-RUN sed -i "s/Listen 80/Listen 8080/g" /etc/httpd/conf/httpd.conf       
+EXPOSE 9000
 
-#COPY ./php.extensions/* 
+USER 1001
 
-#COPY ./src/* /var/www/html/
-RUN chmod 775 /var/www/html
-
-COPY ./s2i/bin/ /usr/libexec/s2i
+#CMD php-fpm & httpd -D FOREGROUND

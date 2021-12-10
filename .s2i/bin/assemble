@@ -3,9 +3,9 @@
 set -e
 
 echo "---S2I---> Installing application source"
-cp -Rf /tmp/src/* ./
+#cp -Rf /tmp/src/* ./
 
 DATE=`date "+%b %d, %Y @ %H:%M %p"`
 
-echo "Page built on $DATE" >> ./info.html
+echo "Page built on $DATE" >> /var/tmp/info.html
 

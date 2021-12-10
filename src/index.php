@@ -1,4 +1,6 @@
 <?php
+// Report all PHP errors
+error_reporting(E_ALL);
 
 session_start();
 

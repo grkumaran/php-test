@@ -2,5 +2,7 @@
 
 # Make Apache show 'debug' level logs during start up
 # exec run-httpd -e debug $@
-exec httpd -D FOREGROUND
+#exec httpd -D FOREGROUND
+exec php-fpm & httpd -D FOREGROUND
+
 
