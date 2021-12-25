@@ -22,19 +22,32 @@
         <div class="collapse navbar-collapse" id="navbarSupportedContent">
           <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
             <li class="nav-item"><a class="nav-link" aria-current="page" href="home.php">Home</a></li>
+            
+            <li class="nav-item dropdown">
+              <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                Profile
+              </a>
+              <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
+                <?php foreach($data_child as $data) { ?>
+                    <li><a class="dropdown-item" href="profile_child.php?_id=<?php echo $data[0] ?>"><?php echo $data[2] ?></a></li>
+                <?php } ?>
+                <li><hr class="dropdown-divider"></li>
+                <li><a class="dropdown-item" href="profile_parent.php">Your profile</a></li>
+                <li><a class="dropdown-item" href="addChild.php">Add Child</a></li>
+              </ul>
+            </li>
+            
             <?php if (count($data_child) <= 0 ) { ?>
             <li class="nav-item dropdown disabled"></li>
             <?php } else { ?>
             <li class="nav-item dropdown">
               <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                Child
+                Report
               </a>
               <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
                 <?php foreach($data_child as $data) { ?>
                     <li><a class="dropdown-item" href="childReport.php?_id=<?php echo $data[0] ?>"><?php echo $data[2] ?></a></li>
                 <?php } ?>
-                <li><hr class="dropdown-divider"></li>
-                <li><a class="dropdown-item" href="addChild.php">Add Child</a></li>
               </ul>
             </li>
             <?php } ?>

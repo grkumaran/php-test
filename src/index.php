@@ -6,6 +6,8 @@ session_start();
 
 require('database.php');
 
+$err_msg = '';
+
 if (isset($_SESSION['user_id'])) {
     header('Location: home.php');
 } elseif (isset($_POST['formSubmission']) && $_POST['formSubmission'] === '1') {
@@ -15,32 +17,78 @@ if (isset($_SESSION['user_id'])) {
     $formNewUser = isset($_POST['formNewUser']) ? true : false;
 
     if ($formNewUser) {
-        $bulk = new MongoDB\Driver\BulkWrite;
-        $bulk->insert(['parent_id' => 0, 'name' => '', 'user_id' => '', 'email' => $login_email, 'password' => $login_password, 'age' => 0, 'address'=>'', 'city'=>'', 'country'=>'', 'phone'=>'', 'updatedAge' => '']);
-        $result = $dbMongoDB->executeBulkWrite('hackathon.Users', $bulk);
 
-        foreach($result as $res) {
-            if ($res->nInserted !== 1) {
-                echo 'Error in registering user';
-                exit;
+        // verification of the new parent not exist in system
+        $flag_user_logged = false;
+        $query = new MongoDB\Driver\Query(['email' => $login_email, 'parent_id' => 0], []);
+        $cursor = $dbMongoDB->executeQuery('hackathon.Users', $query);
+        foreach ($cursor as $document) {
+            $flag_user_logged = true;
+        }
+        
+        if ($flag_user_logged) {
+            // new parent id already exist, so do not allow duplicate
+            
+            $err_msg = 'Error: User id already exist in system, please login';
+            
+        } else {
+            
+            // get latest _id from User's collection
+            $last_id = 0;
+            $query = new MongoDB\Driver\Query(
+                ['_id' => [ '$gt' => 0 ]],                                // filter
+                [                                                       // options
+                        'projection' => [ '_id' => 1 ],
+                        'sort' => [ '_id' => -1 ],
+                        'limit' => 1
+                    ]
+                );
+            $cursor = $dbMongoDB->executeQuery('hackathon.Users', $query);
+            foreach ($cursor as $document) {
+                if (isset($document->_id) && $document->_id > 0) {
+                    $last_id = $document->_id;
+                    break;
+                }
+            }            
+            
+            // insert of new parent
+            $bulk = new MongoDB\Driver\BulkWrite;
+            // $bulk->insert(['parent_id' => 0, 'name' => '', 'user_id' => '', 'email' => $login_email, 'password' => $login_password, 'age' => 0, 'address'=>'', 'city'=>'', 'country'=>'', 'phone'=>'', 'updatedAge' => '']);
+            $bulk->insert(['_id' => ($last_id+1), 'parent_id' => 0, 'name' => '', 'user_id' => '', 'email' => $login_email, 'password' => bcrypt_encrypt_password($login_password), 'age' => 0, 'address'=>'', 'city'=>'', 'country'=>'', 'phone'=>'', 'updatedAge' => '']);
+            $result = $dbMongoDB->executeBulkWrite('hackathon.Users', $bulk);
+
+            foreach($result as $res) {
+                if ($res->nInserted !== 1) {
+                    $err_msg =  'Error in registering user';
+                    break;
+                }
             }
+            
         }
     }
     
     
-    $flag_user_logged = false;
-    $query = new MongoDB\Driver\Query(['email' => $login_email, 'password' => $login_password, 'parent_id' => 0], []);
-    $cursor = $dbMongoDB->executeQuery('hackathon.Users', $query);
-    foreach ($cursor as $document) {
-        $flag_user_logged = true;
-    }
-    
-    if ($flag_user_logged) {
-        // user logged-in
-        $_SESSION['user_id'] = $document->_id;
-        header('Location: home.php');
-    } else {
-        header('Location: index.php');
+    if ($err_msg === '') {
+
+        // normal login flow continue
+        $flag_user_logged = false;
+        // $query = new MongoDB\Driver\Query(['email' => $login_email, 'password' => $login_password, 'parent_id' => 0], []);
+        $query = new MongoDB\Driver\Query(['email' => $login_email, 'parent_id' => 0], []);
+        $cursor = $dbMongoDB->executeQuery('hackathon.Users', $query);
+        foreach ($cursor as $document) {
+            if (password_verify($login_password, $document->password)) {
+                $flag_user_logged = true;
+            } else {
+                $err_msg = 'Error: password incorrect';
+            }
+            break;
+        }
+        
+        if ($flag_user_logged) {
+            // user logged-in
+            $_SESSION['user_id'] = $document->_id;
+            header('Location: home.php');
+        }
     }
 }
 
@@ -64,6 +112,11 @@ require('page_header.php');
         <input type="checkbox" class="form-check-input" id="formNewUser" name="formNewUser">
         <label class="form-check-label" for="exampleCheck1">New parent</label>
       </div>
+      <?php if ($err_msg != '') { ?>
+          <div class="mb-3 form-check">
+            <label class="form-check-label" for="exampleCheck1"><span style="color:red"><?php echo $err_msg; ?></span></label>
+          </div>
+      <?php } ?>
       <button type="button" class="btn btn-primary" onClick="javascript:handleSubmit()">Submit</button>
       <input type="hidden" name="formSubmission" value="1">
     </form>

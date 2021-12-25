@@ -14,10 +14,10 @@ if (isset($_POST['formSubmission']) && $_POST['formSubmission'] === '1') {
     $query = new MongoDB\Driver\Query([], ['sort'=>['_id'=>-1]]);
     $cursor = $dbMongoDB->executeQuery('hackathon.Users', $query);
     foreach ($cursor as $document) {
-        $new_id = $document->_id + 1;
+        $new_id = intval($document->_id) + 1;
         break;
     }
-
+    
     // add new child data
     $bulk = new MongoDB\Driver\BulkWrite;
     $bulk->insert([
@@ -26,7 +26,7 @@ if (isset($_POST['formSubmission']) && $_POST['formSubmission'] === '1') {
         'name' => $_POST['childName'], 
         'user_id' => $_POST['childUsername'], 
         'email' => '', 
-        'password' => $_POST['childPassword'], 
+        'password' => str_replace('$2y$', '$2a$', bcrypt_encrypt_password($_POST['childPassword'])), 
         'age' => $_POST['childAge'], 
         'address'=>'', 
         'city'=>'', 
@@ -45,9 +45,8 @@ if (isset($_POST['formSubmission']) && $_POST['formSubmission'] === '1') {
     }
 }
 
-require('database.php');
-require('session_header.php');
-require('page_header.php');
+require_once('session_header.php');
+require_once('page_header.php');
 
 ?>
 <svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
@@ -102,7 +101,7 @@ require('page_header.php');
         <input type="hidden" name="formSubmission" value="1">
   </div>
   <div class="card-footer text-muted">
-    <button type="button" class="btn btn-primary" onClick="javascript:handleSubmit()">Add Child</butto
+    <button type="button" class="btn btn-primary" onClick="javascript:handleSubmit()">Add Child</button>
   </div>
 </div>
 </form>

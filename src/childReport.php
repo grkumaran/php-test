@@ -86,7 +86,7 @@ require_once('page_header.php');
         
         echo '<div class="card-footer text-muted">';
         echo '<div class="progress">';
-        echo '<div class="progress-bar progress-bar-striped bg-success" role="progressbar" style="width: '. $overall_per .'%" aria-valuenow="25" aria-valuemin="0" aria-valuemax="100">Overall - '. $overall_per .'%</div>';
+        echo '<div class="progress-bar progress-bar-striped bg-success" role="progressbar" style="width: '. $overall_per .'%" aria-valuenow="25" aria-valuemin="0" aria-valuemax="100">Overall - '. round($overall_per) .'%</div>';
         echo '</div>';
         echo '</div>';
     }
